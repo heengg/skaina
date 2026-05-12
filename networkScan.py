@@ -1,10 +1,11 @@
 import subprocess
 import platform
+import socket
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 def ping_address(ip: str) -> bool:
     flag = "-n" if platform.system().lower() == "windows" else "-c"
-
     result = subprocess.run(
         ["ping", flag, "1", ip],
         stdout=subprocess.PIPE,   # ← capture output now
@@ -18,15 +19,42 @@ def ping_address(ip: str) -> bool:
 
     return result.returncode == 0
 
+def ipAssign() -> list:
+    hostname = socket.gethostname()
+    my_ip = socket.gethostbyname(hostname)
+    network = ".".join(my_ip.split(".")[:3])
+
+    print(f"Your IP     : {my_ip}")
+    print(f"Network     : {network}.x")
+    ips = [f"{network}.{i}" for i in range(1, 255)]
+    print(f"Scanning    : {network}.1 to {network}.254\n")
+    return ips 
+
+def scan(ip: str):
+    if ping_address(ip):
+        print(f"{ip} is UP")
+    else:
+        print(f"{ip} is DOWN")
+
+def ipScan(ips: list): 
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        executor.map(scan, ips)
+
+    print("\nScan complete!")
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python networkScan.py <ip>")
         print("Example: python networkScan.py 8.8.8.8")
         sys.exit(1)
+    argument = sys.argv[1]
 
-    ip = sys.argv[1]  
-
-    if ping_address(ip):
-        print(f"{ip} is UP")
+    if argument == "--scan":
+        print("Starting network scan...\n")
+        ips = ipAssign()
+        ipScan(ips)
     else:
-        print(f"{ip} is DOWN")
+        ip = sys.argv[1]  
+        ipScan(ips)
+ 
+  
