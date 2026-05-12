@@ -8,10 +8,10 @@ def ping_address(ip: str) -> bool:
     flag = "-n" if platform.system().lower() == "windows" else "-c"
     result = subprocess.run(
         ["ping", flag, "1", ip],
-        stdout=subprocess.PIPE,   # ← capture output now
+        stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL
     )
-    output = result.stdout.decode().lower()  # convert to readable text
+    output = result.stdout.decode().lower()
 
     # Windows fix — check for unreachable in the output
     if "unreachable" in output or "timed out" in output:
